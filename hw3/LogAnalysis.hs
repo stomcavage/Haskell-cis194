@@ -3,50 +3,50 @@
 module LogAnalysis where
 
 import Log
-import Text.ParserCombinators.Parsec 
+import Text.ParserCombinators.Parsec as P
 
 -- Exercise 1: Parse a line in the log file
 parseLogInfo :: Parser MessageType
-parseLogInfo = char 'I' >> return Info
+parseLogInfo = P.char 'I' >> return Info
 
 parseLogWarn :: Parser MessageType
-parseLogWarn = char 'W' >> return Warning
+parseLogWarn = P.char 'W' >> return Warning
 
 parseLogErr :: Parser MessageType
-parseLogErr = do _ <- char 'E' 
-                 _ <- spaces
-                 x <- many1 digit
+parseLogErr = do _ <- P.char 'E' 
+                 _ <- P.spaces
+                 x <- P.many1 P.digit
                  return $ Error (read x)
 
 parseLogType :: Parser MessageType
 parseLogType = try parseLogInfo <|> try parseLogWarn <|> parseLogErr
 
 parseTimeStamp :: Parser TimeStamp
-parseTimeStamp = do x <- many1 digit
+parseTimeStamp = do x <- P.many1 P.digit
                     return $ read x
 
 parseLogLine :: Parser LogMessage
 parseLogLine = do logType <- parseLogType 
-                  spaces
+                  P.spaces
                   logTime <- parseTimeStamp 
-                  spaces
-                  logMsg  <- many1 anyChar
+                  P.spaces
+                  logMsg  <- P.many1 P.anyChar
                   return (LogMessage logType logTime logMsg)
 
 parseMessage :: String -> MaybeLogMessage
-parseMessage message = case parse parseLogLine "log" message of
+parseMessage message = case P.parse parseLogLine "log" message of
                             Left _    -> InvalidLM message 
                             Right val -> ValidLM val
 
-{-
 -- Exercise 2: Discard invalid log lines
 validMessagesOnly :: [MaybeLogMessage] -> [LogMessage]
-validMessagesOnly maybeLogMessages = filter (\m -> (LogMessage m)) maybeLogMessages
+validMessagesOnly ms = [m | ValidLM m <- ms]
 
 -- Exercise 3: Parse an entire log file
-parse :: String -> [LogMessage]
-parse logFile = validMessagesOnly [parseMessage message | message <- lines logFile]
+parseLog :: String -> [LogMessage]
+parseLog logFile = validMessagesOnly [parseMessage m | m <- lines logFile]
 
+{-
 -- Exercise 4: Provide a comparison function for use in sorting
 compareMsgs :: LogMessage -> LogMessage -> Ordering
 compareMsgs (LogMessage _ a _) (LogMessage _ b _) = a `compare` b
