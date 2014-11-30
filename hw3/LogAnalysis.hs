@@ -2,6 +2,7 @@
 
 module LogAnalysis where
 
+import Data.List
 import Log
 import Text.ParserCombinators.Parsec as P
 
@@ -46,13 +47,11 @@ validMessagesOnly ms = [m | ValidLM m <- ms]
 parseLog :: String -> [LogMessage]
 parseLog logFile = validMessagesOnly [parseMessage m | m <- lines logFile]
 
-{-
 -- Exercise 4: Provide a comparison function for use in sorting
 compareMsgs :: LogMessage -> LogMessage -> Ordering
 compareMsgs (LogMessage _ a _) (LogMessage _ b _) = a `compare` b
 
 -- Exercise 5: Provide a sorting function
 sortMessages :: [LogMessage] -> [LogMessage]
-sortMessages a b = sort compareMsgs a b
--}
+sortMessages ms = sortBy compareMsgs ms
 
