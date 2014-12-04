@@ -55,3 +55,11 @@ compareMsgs (LogMessage _ a _) (LogMessage _ b _) = a `compare` b
 sortMessages :: [LogMessage] -> [LogMessage]
 sortMessages ms = sortBy compareMsgs ms
 
+-- Exercise 6: Extract error messages with severity of 50 or greater
+errorFilter :: LogMessage -> Bool
+errorFilter (LogMessage (Error e) _ _) | e >= 50 = True
+errorFilter _ = False
+
+whatWentWrong :: [LogMessage] -> [String]
+whatWentWrong ms = map (\(LogMessage _ _ m) -> m) (sortMessages $ filter errorFilter ms)
+
