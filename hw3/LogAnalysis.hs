@@ -57,12 +57,15 @@ sortMessages :: [LogMessage] -> [LogMessage]
 sortMessages ms = sortBy compareMsgs ms
 
 -- Exercise 6: Extract error messages with severity of 50 or greater
+getMessages :: [LogMessage] -> [String] 
+getMessages ms = map (\(LogMessage _ _ m) -> m) ms
+
 errorFilter :: LogMessage -> Bool
 errorFilter (LogMessage (Error e) _ _) | e >= 50 = True
 errorFilter _ = False
 
 whatWentWrong :: [LogMessage] -> [String]
-whatWentWrong ms = map (\(LogMessage _ _ m) -> m) (sortMessages $ filter errorFilter ms)
+whatWentWrong ms = getMessages (sortMessages $ filter errorFilter ms)
 
 -- Exercise 7: Case-insensitive search for a string in a list of messages
 messagesAbout :: String -> [LogMessage] -> [LogMessage]
@@ -70,5 +73,5 @@ messagesAbout search ms = filter (\(LogMessage _ _ m) -> isInfixOf (map toLower 
 
 -- Exercise 8: Extract messages with severity at least 50 or that contain the search string
 whatWentWrongEnhanced :: String -> [LogMessage] -> [String]
-whatWentWrongEnhanced search ms = (whatWentWrong ms) `union` (map (\(LogMessage _ _ m) -> m) (messagesAbout search ms))
+whatWentWrongEnhanced search ms = (whatWentWrong ms) `union` (getMessages (messagesAbout search ms))
 
