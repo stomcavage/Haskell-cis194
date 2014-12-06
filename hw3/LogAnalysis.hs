@@ -2,6 +2,7 @@
 
 module LogAnalysis where
 
+import Data.Char
 import Data.List
 import Log
 import Text.ParserCombinators.Parsec as P
@@ -62,4 +63,8 @@ errorFilter _ = False
 
 whatWentWrong :: [LogMessage] -> [String]
 whatWentWrong ms = map (\(LogMessage _ _ m) -> m) (sortMessages $ filter errorFilter ms)
+
+-- Exercise 7: Case-insensitive search for a string in a list of messages
+messagesAbout :: String -> [LogMessage] -> [LogMessage]
+messagesAbout search ms = filter (\(LogMessage _ _ m) -> isInfixOf (map toLower search) (map toLower m)) ms
 
