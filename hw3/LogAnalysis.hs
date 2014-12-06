@@ -68,3 +68,7 @@ whatWentWrong ms = map (\(LogMessage _ _ m) -> m) (sortMessages $ filter errorFi
 messagesAbout :: String -> [LogMessage] -> [LogMessage]
 messagesAbout search ms = filter (\(LogMessage _ _ m) -> isInfixOf (map toLower search) (map toLower m)) ms
 
+-- Exercise 8: Extract messages with severity at least 50 or that contain the search string
+whatWentWrongEnhanced :: String -> [LogMessage] -> [String]
+whatWentWrongEnhanced search ms = (whatWentWrong ms) `union` (map (\(LogMessage _ _ m) -> m) (messagesAbout search ms))
+
