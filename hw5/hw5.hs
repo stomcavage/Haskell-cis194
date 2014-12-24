@@ -47,7 +47,47 @@ instance Ring (Mat2x2) where
     addId = MkMat2x2 (0, 0) (0, 0)
     mulId = MkMat2x2 (1, 0) (0, 1)
     addInv (MkMat2x2 (a, b) (c, d)) = MkMat2x2 (-a, -b) (-c, -d)
-    add (MkMat2x2 (a1, b1) (c1, d1)) (MkMat2x2 (a2, b2) (c2, d2)) = MkMat2x2 (a1 + a2, b1 + b2) (c1 + c2, d1 + d2)
-    mul (MkMat2x2 (a1, b1) (c1, d1)) (MkMat2x2 (a2, b2) (c2, d2)) = 
-        MkMat2x2 ((a1 * a2 + b1 * c2), (a1 * b2 + b1 * d2)) ((c1 * a2 + d1 * c2), (c1 * b2 + d1 * d2))
+    add (MkMat2x2 (a11, a12) (a21, a22)) (MkMat2x2 (b11, b12) (b21, b22)) = 
+        MkMat2x2 (a11 + b11, a12 + b12) (a21 + b21, a22 + b22)
+    mul (MkMat2x2 (a11, a12) (a21, a22)) (MkMat2x2 (b11, b12) (b21, b22)) =
+        MkMat2x2 ((a11 * b11 + a12 * b21), (a11 * b12 + a12 * b22)) ((a21 * b11 + a22 * b21), (a21 * b12 + a22 * b22))
+
+mat2x2InstanceWorks :: Bool
+mat2x2InstanceWorks = add (MkMat2x2 (1, 2) (3, 4)) (MkMat2x2 (5, 6) (7, 8)) == MkMat2x2 (6, 8) (10, 12) &&
+                      mul (MkMat2x2 (1, 2) (3, 4)) (MkMat2x2 (5, 6) (7, 8)) == MkMat2x2 (19, 22) (43, 50) &&
+                      add (MkMat2x2 (1, 2) (3, 4)) addId == MkMat2x2 (1, 2) (3, 4) &&
+                      mul (MkMat2x2 (1, 2) (3, 4)) mulId == MkMat2x2 (1, 2) (3, 4) &&
+                      add (MkMat2x2 (1, 2) (3, 4)) (addInv $ MkMat2x2 (5, 6) (7, 8)) == MkMat2x2 (-4, -4) (-4, -4)
+
+instance Parsable Mat2x2 where
+    parse string = undefined
+
+mat2x2ParsingWorks :: Bool
+mat2x2ParsingWorks = undefined
+
+-- Exercise 4: Create a Ring for Boolean arithmetic
+data Boolean = MkBoolean Bool
+    deriving (Show, Eq)
+
+instance Ring (Boolean) where
+    addId = MkBoolean False 
+    mulId = MkBoolean True
+    addInv (MkBoolean a) = MkBoolean $ not a 
+    add (MkBoolean a) (MkBoolean b) = MkBoolean $ (a || b) && (not (a && b))
+    mul (MkBoolean a) (MkBoolean b) = MkBoolean $ a && b
+
+booleanInstanceWorks :: Bool
+booleanInstanceWorks = add (MkBoolean True) (MkBoolean False)  == MkBoolean True  &&
+                       add (MkBoolean True) (MkBoolean True)   == MkBoolean False &&
+                       add (MkBoolean False) (MkBoolean False) == MkBoolean False &&
+                       mul (MkBoolean True) (MkBoolean False)  == MkBoolean False &&
+                       mul (MkBoolean True) (MkBoolean True)   == MkBoolean True  &&
+                       mul (MkBoolean False) (MkBoolean False) == MkBoolean False &&
+                       add (MkBoolean True)  addId == MkBoolean True  &&
+                       add (MkBoolean False) addId == MkBoolean False &&
+                       mul (MkBoolean True)  mulId == MkBoolean True &&
+                       mul (MkBoolean False) mulId == MkBoolean False
+
+instance Parsable Boolean where
+    parse string = undefined
 
