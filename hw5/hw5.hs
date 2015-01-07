@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# OPTIONS_GHC -Wall -fno-warn-orphans #-}
 {-
 Name: Steven Tomcavage
 Collaborators: none 
@@ -7,6 +7,7 @@ Notes:
 
 module HW05 where
 
+import Data.List (stripPrefix)
 import Data.Maybe
 import Ring
 import Parser
@@ -66,28 +67,35 @@ mat2x2ParsingWorks :: Bool
 mat2x2ParsingWorks = undefined
 
 -- Exercise 4: Create a Ring for Boolean arithmetic
-data Boolean = MkBoolean Bool
-    deriving (Show, Eq)
-
-instance Ring (Boolean) where
-    addId = MkBoolean False 
-    mulId = MkBoolean True
-    addInv (MkBoolean a) = MkBoolean $ not a 
-    add (MkBoolean a) (MkBoolean b) = MkBoolean $ (a || b) && (not (a && b))
-    mul (MkBoolean a) (MkBoolean b) = MkBoolean $ a && b
+instance Ring Bool where
+    addId  = False 
+    mulId  = True
+    addInv = (not)
+    add    = (/=)
+    mul    = (&&)
 
 booleanInstanceWorks :: Bool
-booleanInstanceWorks = add (MkBoolean True) (MkBoolean False)  == MkBoolean True  &&
-                       add (MkBoolean True) (MkBoolean True)   == MkBoolean False &&
-                       add (MkBoolean False) (MkBoolean False) == MkBoolean False &&
-                       mul (MkBoolean True) (MkBoolean False)  == MkBoolean False &&
-                       mul (MkBoolean True) (MkBoolean True)   == MkBoolean True  &&
-                       mul (MkBoolean False) (MkBoolean False) == MkBoolean False &&
-                       add (MkBoolean True)  addId == MkBoolean True  &&
-                       add (MkBoolean False) addId == MkBoolean False &&
-                       mul (MkBoolean True)  mulId == MkBoolean True &&
-                       mul (MkBoolean False) mulId == MkBoolean False
+booleanInstanceWorks = add True False  == True  &&
+                       add True True   == False &&
+                       add False False == False &&
+                       mul True False  == False &&
+                       mul True True   == True  &&
+                       mul False False == False &&
+                       add True  addId == True  &&
+                       add False addId == False &&
+                       mul True  mulId == True &&
+                       mul False mulId == False
 
-instance Parsable Boolean where
-    parse string = undefined
+instance Parsable Bool where 
+    parse string 
+        | Just stringTail <- stripPrefix "True" string = Just (True, stringTail) 
+        | Just stringTail <- stripPrefix "False" string = Just (False, stringTail) 
+        | otherwise = Nothing
+
+booleanParsingWorks :: Bool
+booleanParsingWorks = (parse "True" == Just (True, "")) &&
+                      (parse "False" == Just (False, "")) &&
+                      (parseRing "True + False" == Just True) &&
+                      (parseRing "True + True" == Just False) &&
+                      (parseRing "True * False" == Just False)
 
