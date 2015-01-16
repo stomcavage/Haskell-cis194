@@ -60,12 +60,6 @@ mat2x2InstanceWorks = add (MkMat2x2 (1, 2) (3, 4)) (MkMat2x2 (5, 6) (7, 8)) == M
                       mul (MkMat2x2 (1, 2) (3, 4)) mulId == MkMat2x2 (1, 2) (3, 4) &&
                       add (MkMat2x2 (1, 2) (3, 4)) (addInv $ MkMat2x2 (5, 6) (7, 8)) == MkMat2x2 (-4, -4) (-4, -4)
 
-instance Parsable Mat2x2 where
-    parse string = undefined
-
-mat2x2ParsingWorks :: Bool
-mat2x2ParsingWorks = undefined
-
 -- Exercise 4: Create a Ring for Boolean arithmetic
 instance Ring Bool where
     addId  = False 
