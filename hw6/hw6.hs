@@ -56,3 +56,10 @@ parseMarkets bstring = case parseData bstring of
                                Error err2  -> Left err2
                                Success suc -> Right suc
 
+-- Exercise 4: Load the markets.json file
+loadData :: IO [Market]
+loadData = do bstring <- B.readFile "markets.json"
+              case parseMarkets bstring of 
+                  Left err      -> fail err
+                  Right markets -> return markets
+
