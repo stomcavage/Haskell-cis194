@@ -9,12 +9,12 @@ Notes:
 module HW06 where
 
 import Data.Aeson
+import Data.List
 import Data.Monoid
 import GHC.Generics
 
 import qualified Data.ByteString.Lazy.Char8 as B
 import qualified Data.Text                  as T
-import qualified Data.Text.IO               as T
 
 -- Create a Market type that maps to the markets JSON file
 data Market = Market {
@@ -62,4 +62,49 @@ loadData = do bstring <- B.readFile "markets.json"
               case parseMarkets bstring of 
                   Left err      -> fail err
                   Right markets -> return markets
+
+-- Exercise 5: Create an ordered list datatype and monoid instance 
+data OrdList a = OrdList { getOrdList :: [a] } 
+    deriving (Eq, Show)
+
+instance Ord a => Monoid (OrdList a) where
+    mempty          = OrdList { getOrdList = [] }
+    mappend ol1 ol2 = OrdList { getOrdList = sort $ (getOrdList ol1) ++ (getOrdList ol2) }
+
+evens :: OrdList Integer
+evens = OrdList [2,4,6]
+
+odds :: OrdList Integer
+odds = OrdList [1,3,5]
+
+combined :: OrdList Integer
+combined = evens <> odds
+
+-- This function type is to simplify the code:
+--    Given a string to search for and the JSON to search in, produce m
+type Searcher m = T.Text -> [Market] -> m
+
+-- Exercise 6: Create a way to search for a market by name
+search :: Monoid m => (Market -> m) -> Searcher m
+search _ _ [] = mempty
+search f searchStr (mkt@(Market { marketname = name }) : mkts) 
+    | name == searchStr = f mkt <> search f searchStr mkts
+    | otherwise         = search f searchStr mkts 
+
+-- Exercise 7: Function that returns the first search result
+firstFound :: Searcher (Maybe Market)
+firstFound = undefined
+
+-- Exerise 8: Function that returns the last search result
+lastFound :: Searcher (Maybe Market)
+lastFound = undefined
+
+-- Exercise 9: Function that retuns all search results
+allFound :: Searcher [Market]
+allFound = undefined
+
+-- Exercise 10: Function that returns number of search results
+numberFound :: Searcher Int
+numberFound = undefined
+
 
