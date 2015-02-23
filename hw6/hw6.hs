@@ -28,7 +28,7 @@ instance FromJSON Market
 
 -- Here's some data for testing
 testJSON :: B.ByteString
-testJSON = "[{ \"fmid\":1005969, \"marketname\":\"Y Not Wednesday Farmers Market at Town Center\", \"website\":\"http://www.sandlercenter.org/index/ynotwednesdays\", \"street\":\"201 Market Street,\", \"city\":\"Virginia Beach\", \"county\":\"Virginia Beach\", \"state\":\"Virginia\", \"zip\":\"23462\", \"season1date\":\"June to August\", \"season1time\":\"Wed:5:00 PM - 8:00 PM;\", \"season2date\":\"\", \"season2time\":\"\", \"season3date\":\"\", \"season3time\":\"\", \"season4date\":\"\", \"season4time\":\"\", \"x\":-76.135361, \"y\":36.841885, \"location\":\"Other\", \"credit\":\"Y\", \"wic\":\"N\", \"wiccash\":\"N\", \"sfmnp\":\"N\", \"snap\":\"N\", \"bakedgoods\":\"Y\", \"cheese\":\"Y\", \"crafts\":\"N\", \"flowers\":\"Y\", \"eggs\":\"Y\", \"seafood\":\"Y\", \"herbs\":\"N\", \"vegetables\":\"Y\", \"honey\":\"Y\", \"jams\":\"Y\", \"maple\":\"N\", \"meat\":\"N\", \"nursery\":\"N\", \"nuts\":\"N\", \"plants\":\"N\", \"poultry\":\"N\", \"prepared\":\"Y\", \"soap\":\"Y\", \"trees\":\"N\", \"wine\":\"Y\", \"updatetime\":\"5/5/12 17:56\"}]"
+testJSON = "[ { \"fmid\":1005969, \"marketname\":\"Y Not Wednesday Farmers Market at Town Center\", \"website\":\"http://www.sandlercenter.org/index/ynotwednesdays\", \"street\":\"201 Market Street,\", \"city\":\"Virginia Beach\", \"county\":\"Virginia Beach\", \"state\":\"Virginia\", \"zip\":\"23462\", \"season1date\":\"June to August\", \"season1time\":\"Wed:5:00 PM - 8:00 PM;\", \"season2date\":\"\", \"season2time\":\"\", \"season3date\":\"\", \"season3time\":\"\", \"season4date\":\"\", \"season4time\":\"\", \"x\":-76.135361, \"y\":36.841885, \"location\":\"Other\", \"credit\":\"Y\", \"wic\":\"N\", \"wiccash\":\"N\", \"sfmnp\":\"N\", \"snap\":\"N\", \"bakedgoods\":\"Y\", \"cheese\":\"Y\", \"crafts\":\"N\", \"flowers\":\"Y\", \"eggs\":\"Y\", \"seafood\":\"Y\", \"herbs\":\"N\", \"vegetables\":\"Y\", \"honey\":\"Y\", \"jams\":\"Y\", \"maple\":\"N\", \"meat\":\"N\", \"nursery\":\"N\", \"nuts\":\"N\", \"plants\":\"N\", \"poultry\":\"N\", \"prepared\":\"Y\", \"soap\":\"Y\", \"trees\":\"N\", \"wine\":\"Y\", \"updatetime\":\"5/5/12 17:56\" }, { \"fmid\":1008044, \"marketname\":\"10:10 Farmers Market\", \"website\":\"http://www.1010farmersmarket.com\", \"street\":\"5960 Stewart Parkway\", \"city\":\"Douglasville\", \"county\":\"Douglas\", \"state\":\"Georgia\", \"zip\":\"30135\", \"season1date\":\"January to December\", \"season1time\":\"Thu:4:00 pm - 7:00 pm;\", \"season2date\":\"\", \"season2time\":\"\", \"season3date\":\"\", \"season3time\":\"\", \"season4date\":\"\", \"season4time\":\"\", \"x\":-84.7689, \"y\":33.7196, \"location\":\"Faith-based institution (e.g., church, mosque, synagogue, temple)\", \"credit\":\"Y\", \"wic\":\"N\", \"wiccash\":\"N\", \"sfmnp\":\"N\", \"snap\":\"N\", \"bakedgoods\":\"Y\", \"cheese\":\"Y\", \"crafts\":\"N\", \"flowers\":\"Y\", \"eggs\":\"N\", \"seafood\":\"N\", \"herbs\":\"Y\", \"vegetables\":\"Y\", \"honey\":\"Y\", \"jams\":\"Y\", \"maple\":\"N\", \"meat\":\"Y\", \"nursery\":\"N\", \"nuts\":\"N\", \"plants\":\"Y\", \"poultry\":\"N\", \"prepared\":\"Y\", \"soap\":\"Y\", \"trees\":\"N\", \"wine\":\"N\", \"updatetime\":\"7/18/12 13:51\" }]"
 
 testValue :: Value
 testValue = case decode testJSON :: Maybe Value of
@@ -63,13 +63,18 @@ loadData = do bstring <- B.readFile "markets.json"
                   Left err      -> fail err
                   Right markets -> return markets
 
+loadTestData :: [Market]
+loadTestData = case parseMarkets testJSON of 
+                  Left err      -> fail err
+                  Right markets -> markets
+
 -- Exercise 5: Create an ordered list datatype and monoid instance 
 data OrdList a = OrdList { getOrdList :: [a] } 
     deriving (Eq, Show)
 
 instance Ord a => Monoid (OrdList a) where
     mempty          = OrdList { getOrdList = [] }
-    mappend ol1 ol2 = OrdList { getOrdList = sort $ (getOrdList ol1) ++ (getOrdList ol2) }
+    mappend ol1 ol2 = OrdList { getOrdList = sort $ getOrdList ol1 ++ getOrdList ol2 }
 
 evens :: OrdList Integer
 evens = OrdList [2,4,6]
@@ -86,10 +91,11 @@ type Searcher m = T.Text -> [Market] -> m
 
 -- Exercise 6: Create a way to search for a market by name
 search :: Monoid m => (Market -> m) -> Searcher m
-search _ _ [] = mempty
-search f searchStr (mkt@(Market { marketname = name }) : mkts) 
-    | name == searchStr = f mkt <> search f searchStr mkts
-    | otherwise         = search f searchStr mkts 
+search mk_m s = go 
+    where go [] = mempty
+          go (mkt@(Market {marketname = name}) : mkts) 
+            | s `T.isInfixOf` name = mk_m mkt <> go mkts
+            | otherwise            = go mkts
 
 -- Exercise 7: Function that returns the first search result
 firstFound :: Searcher (Maybe Market)
@@ -101,10 +107,15 @@ lastFound = undefined
 
 -- Exercise 9: Function that retuns all search results
 allFound :: Searcher [Market]
-allFound = undefined
+allFound = search (:[]) 
+
+testAllFound :: Bool
+testAllFound = length (allFound "Farmer" t)    == 2 &&
+               length (allFound "Wednesday" t) == 1 &&
+               null (allFound "Tuesday" t)
+                    where t = loadTestData
 
 -- Exercise 10: Function that returns number of search results
 numberFound :: Searcher Int
 numberFound = undefined
-
 
