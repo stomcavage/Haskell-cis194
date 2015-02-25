@@ -23,7 +23,7 @@ data Market = Market {
                         y          :: Float,
                         state      :: T.Text
                      }
-    deriving (Show, Generic)
+    deriving (Show, Generic, Eq)
 instance FromJSON Market
 
 -- Here's some data for testing
@@ -97,13 +97,31 @@ search mk_m s = go
             | s `T.isInfixOf` name = mk_m mkt <> go mkts
             | otherwise            = go mkts
 
+-- Helper function for searches
+compose2 :: (c -> d) -> (a -> b -> c) -> a -> b -> d
+compose2 = (.) . (.)
+
 -- Exercise 7: Function that returns the first search result
 firstFound :: Searcher (Maybe Market)
-firstFound = undefined
+firstFound = compose2 getFirst $ search mk_first
+                where mk_first m = First (Just m)
+
+testFirstFound :: Bool
+testFirstFound = case firstFound "Farmer" t of
+                        Just m  -> m == head t
+                        Nothing -> error "firstFound search failed"
+                    where t = loadTestData
 
 -- Exerise 8: Function that returns the last search result
 lastFound :: Searcher (Maybe Market)
-lastFound = undefined
+lastFound = compose2 getLast $ search mk_last
+                where mk_last m = Last (Just m)
+
+testLastFound :: Bool
+testLastFound = case lastFound "Farmer" t of
+                        Just m  -> m == last t
+                        Nothing -> error "firstFound search failed"
+                    where t = loadTestData
 
 -- Exercise 9: Function that retuns all search results
 allFound :: Searcher [Market]
@@ -117,5 +135,16 @@ testAllFound = length (allFound "Farmer" t)    == 2 &&
 
 -- Exercise 10: Function that returns number of search results
 numberFound :: Searcher Int
-numberFound = undefined
+numberFound = compose2 getSum $ search mk_sum
+                where mk_sum _ = Sum 1
+
+testNumberFound :: Bool
+testNumberFound = numberFound "Farmer" t == 2 &&
+               numberFound "Wednesday" t == 1 &&
+               numberFound "Tuesday" t == 0
+                    where t = loadTestData
+
+-- Exercise 11: Order search results from North to South
+orderedNtoS :: Searcher [Market]
+orderedNtoS =  undefined
 
