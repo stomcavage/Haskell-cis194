@@ -72,9 +72,9 @@ testRandomInts = ranList == [ran1, ran2]
           (ran2, _)    = random gen1
 
 -- Exercise 9: Profile the minMax function for a random list of 1,000,000 integers
-minMax :: [Int] -> Maybe (Int, Int)
-minMax [] = Nothing   
-minMax xs = Just (minimum xs, maximum xs)
+--minMax :: [Int] -> Maybe (Int, Int)
+--minMax [] = Nothing   
+--minMax xs = Just (minimum xs, maximum xs)
 
 main :: IO ()
 main = case minMax $ take 1000000 $ randomInts 11 of
@@ -91,3 +91,23 @@ main = case minMax $ take 1000000 $ randomInts 11 of
           2,797,208 bytes maximum slop
                 317 MB total memory in use (0 MB lost due to fragmentation)
 -}
+
+-- Exercise 10: Re-write min-max to use less memory
+minMax :: [Int] -> Maybe (Int, Int)
+minMax []     = Nothing   
+minMax (x:xs) = Just (minMax' x x xs)
+    where minMax' a b []     = (a, b)
+          minMax' a b (y:ys) = a `seq` b `seq` minMax' (min a y) (max b y) ys 
+
+{-
+ New memory profile:
+
+(-9223371378522736183,9223364582230179031)
+1,960,072,704 bytes allocated in the heap
+    1,742,696 bytes copied during GC
+       44,312 bytes maximum residency (2 sample(s))
+       25,320 bytes maximum slop
+            1 MB total memory in use (0 MB lost due to fragmentation)
+-}
+
+
