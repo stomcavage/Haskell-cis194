@@ -1,5 +1,6 @@
 module HW08 where
 
+import Control.Monad
 import Control.Monad.Random
 import Data.List 
 import Data.Maybe
@@ -37,7 +38,7 @@ testSpecialNumbers = specialNumbers ==
     [5,10,15,20,25,30,40,45,50,55,60,65,75,80,85,90,95,100]
 
 -- Include some types for playing Risk
-type StdRand = Rand StdGen
+type StdRand = Rand StdGen 
 type Army    = Int
 type DieRoll = Int
 
@@ -64,4 +65,25 @@ battleResults attack defend = foldl mappend mempty $ zipWith roll sortedAttack s
           roll _ _ = mempty
           sortedAttack = sortBy (flip compare) attack
           sortedDefend = sortBy (flip compare) defend
+
+-- Excercise 5: Simulate a single battle in Risk
+battle :: ArmyCounts -> StdRand ArmyCounts
+battle armies@(ArmyCounts {attackers = a, defenders = d}) = do
+    attack <- replicateM (a - 1) dieRoll
+    defend <- replicateM (min d 2) dieRoll
+    return $ mappend armies $ battleResults attack defend
+
+battleTest :: IO ()
+battleTest = do
+    let a = ArmyCounts {attackers = 3, defenders = 2}
+    print ("Start: " ++ show a)
+    b <- evalRandIO $ battle a
+    print ("End: " ++ show b)
+
+-- Exercise 6: Simulate a full invasion of a territory in Risk
+invade :: ArmyCounts -> StdRand ArmyCounts
+invade armies@(ArmyCounts {attackers = a, defenders = d}) 
+    | d == 0    = return armies 
+    | a < 2     = return armies
+    | otherwise = battle armies >>= invade
 
