@@ -55,13 +55,13 @@ instance Monoid ArmyCounts where
         attackers = 0, 
         defenders = 0 }
     mappend ac1 ac2 = ArmyCounts { 
-        attackers = attackers ac1 - attackers ac2, 
-        defenders = defenders ac1 - defenders ac2 }
+        attackers = attackers ac1 + attackers ac2, 
+        defenders = defenders ac1 + defenders ac2 }
 
 battleResults :: [DieRoll] -> [DieRoll] -> ArmyCounts
 battleResults attack defend = foldl mappend mempty $ zipWith roll sortedAttack sortedDefend
-    where roll a d | a > d  = ArmyCounts { attackers = 0, defenders = 1 }
-                   | a <= d = ArmyCounts { attackers = 1, defenders = 0 }
+    where roll a d | a > d  = ArmyCounts { attackers =  0, defenders = -1 }
+                   | a <= d = ArmyCounts { attackers = -1, defenders =  0 }
           roll _ _ = mempty
           sortedAttack = sortBy (flip compare) attack
           sortedDefend = sortBy (flip compare) defend
@@ -73,8 +73,8 @@ battle armies@(ArmyCounts {attackers = a, defenders = d}) = do
     defend <- replicateM (min d 2) dieRoll
     return $ mappend armies $ battleResults attack defend
 
-battleTest :: IO ()
-battleTest = do
+testBattle :: IO ()
+testBattle = do
     let a = ArmyCounts {attackers = 3, defenders = 2}
     print ("Start: " ++ show a)
     b <- evalRandIO $ battle a
@@ -86,4 +86,7 @@ invade armies@(ArmyCounts {attackers = a, defenders = d})
     | d == 0    = return armies 
     | a < 2     = return armies
     | otherwise = battle armies >>= invade
+
+testInvade :: IO ()
+testInvade = undefined
 
