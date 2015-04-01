@@ -68,10 +68,10 @@ battleResults attack defend = foldl mappend mempty $ zipWith roll sortedAttack s
 
 -- Excercise 5: Simulate a single battle in Risk
 battle :: ArmyCounts -> StdRand ArmyCounts
-battle armies@(ArmyCounts {attackers = a, defenders = d}) = do
-    attack <- replicateM (a - 1) dieRoll
-    defend <- replicateM (min d 2) dieRoll
-    return $ mappend armies $ battleResults attack defend
+battle ac = do
+    attack <- replicateM (attackers ac - 1) dieRoll
+    defend <- replicateM (min 2 $ defenders ac) dieRoll
+    return $ mappend ac $ battleResults attack defend
 
 testBattle :: IO ()
 testBattle = do
@@ -82,11 +82,29 @@ testBattle = do
 
 -- Exercise 6: Simulate a full invasion of a territory in Risk
 invade :: ArmyCounts -> StdRand ArmyCounts
-invade armies@(ArmyCounts {attackers = a, defenders = d}) 
-    | d == 0    = return armies 
-    | a < 2     = return armies
-    | otherwise = battle armies >>= invade
+invade ac
+    | defenders ac == 0 = return ac
+    | attackers ac < 2  = return ac 
+    | otherwise         = battle ac >>= invade
 
 testInvade :: IO ()
-testInvade = undefined
+testInvade = do
+    let a = ArmyCounts {attackers = 3, defenders = 2}
+    print ("Start: " ++ show a)
+    b <- evalRandIO $ invade a
+    print ("End: " ++ show b)
 
+-- Exercise 7: Calculate the probability of successful invasion
+(//) :: Int -> Int -> Double
+a // b = fromIntegral a / fromIntegral b
+
+successProb :: ArmyCounts -> StdRand Double
+successProb a = undefined
+
+testSuccessProb :: IO ()
+testSuccessProb = do
+    let a = ArmyCounts {attackers = 3, defenders = 2}
+    print ("Start: " ++ show a)
+    b <- evalRandIO $ successProb a
+    print ("Probability of success: " ++ show b)
+    
