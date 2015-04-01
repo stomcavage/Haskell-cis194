@@ -99,7 +99,11 @@ testInvade = do
 a // b = fromIntegral a / fromIntegral b
 
 successProb :: ArmyCounts -> StdRand Double
-successProb a = undefined
+successProb a = do
+    let count = 1000
+    successes <- filterM successful [1..count]
+    return $ length successes // count
+        where successful _ = do b <- invade a; return $ defenders b == 0
 
 testSuccessProb :: IO ()
 testSuccessProb = do
