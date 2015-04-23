@@ -131,8 +131,17 @@ genBST lower upper = do
                 return $ Node leftTree x rightTree)]
 
 -- Exercise 9: Test parsers with HUnit
-parserTests :: Test
-parserTests = TestList [
-    "Integer: 2" ~: parseAll "2" ~?= Just (2 :: Integer),
-    "Integer: 0" ~: parseAll "0" ~?= Just (0 :: Integer)]
+parserTests :: IO ()
+parserTests = do
+    result <- runTestTT $ TestList [
+        "Integer: 2"     ~: parseAll "2"     ~?= Just (2  :: Integer),
+        "Integer: 23"    ~: parseAll "23"    ~?= Just (23 :: Integer),
+        "Integer: -4"    ~: parseAll "-4"    ~?= Just (-4 :: Integer),
+        "Mod5: 4"        ~: parseAll "4"     ~?= Just (MkMod 4),
+        "Mod5: 5"        ~: parseAll "5"     ~?= Just (MkMod 0),
+        "Boolean: True"  ~: parseAll "True"  ~?= Just True,
+        "Boolean: False" ~: parseAll "False" ~?= Just False,
+        "Mat2x2: [0,0] [0,0]"      ~: parseAll "[[0,0][0,0]]"      ~?= Just (MkMat 0 0 0 0),
+        "Mat2x2: [10,20] [30,-40]" ~: parseAll "[[10,20][30,-40]]" ~?= Just (MkMat 10 20 30 (-40))]
+    print result
 
