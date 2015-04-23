@@ -3,6 +3,8 @@
 module HW09 where
 
 import Control.Monad
+import System.Random
+import Test.HUnit
 import Test.QuickCheck
 import Ring
 
@@ -57,4 +59,80 @@ prop_8 x y z = mul (add y z) x == add (mul y x) (mul z x)
 
 prop_9 :: (Ring a, Eq a) => a -> Bool
 prop_9 x = add x (addInv x) == addId && add (addInv x) x == addId
+
+-- Exercise 4: Quickcheck property that runs all 9 previous quickcheck properties
+prop_ring :: (Ring a, Eq a) => a -> a -> a -> Property
+prop_ring x y z = conjoin [prop_1 x y z, 
+                           prop_2 x,
+                           prop_3 x,
+                           prop_4 x y,
+                           prop_5 x y z,
+                           prop_6 x,
+                           prop_7 x y z,
+                           prop_8 x y z,
+                           prop_9 x]
+
+-- Exercise 5: Find the broken ring in Ring.hs using quickCheck
+testRings :: IO ()
+testRings = do
+    putStrLn "Testing Integer:"
+    quickCheck (prop_ring :: Integer -> Integer -> Integer -> Property)
+    putStrLn "Testing Mod5:"
+    quickCheck (prop_ring :: Mod5 -> Mod5 -> Mod5 -> Property)
+    putStrLn "Testing Mat2x2:"
+    quickCheck (prop_ring :: Mat2x2 -> Mat2x2 -> Mat2x2 -> Property)
+    putStrLn "Testing Bool:"
+    quickCheck (prop_ring :: Bool -> Bool -> Bool -> Property)
+
+-- Exercise 6: Change BST functions to have an ordering constraint
+data BST a = Leaf | Node (BST a) a (BST a)
+  deriving Show
+
+isBSTBetween :: (Ord a) => Maybe a -> Maybe a -> BST a -> Bool
+isBSTBetween _ _ Leaf = True
+isBSTBetween m_lower m_upper (Node left x right)
+  = isBSTBetween m_lower  (Just x) left  &&
+    isBSTBetween (Just x) m_upper  right &&
+    case m_lower of
+      Just lower -> lower <= x
+      Nothing    -> True
+    &&
+    case m_upper of
+      Just upper -> x <= upper
+      Nothing    -> True
+
+-- | Is this a valid BST?
+isBST :: (Ord a) => BST a -> Bool
+isBST = isBSTBetween Nothing Nothing
+
+-- Exercise 7: Write an arbitrary instance for BST
+-- Exercise 8: Improve randomness of tree generation
+instance (Arbitrary a, Ord a, Random a) => Arbitrary (BST a) where
+    arbitrary = do
+        lower <- arbitrary 
+        upper <- suchThat arbitrary (lower <)
+        genBST lower upper 
+
+genBST :: (Arbitrary a, Ord a, Random a) => a -> a -> Gen (BST a)
+genBST lower upper = do
+    x <- choose (lower, upper) 
+    if x == lower then do
+        rightTree <- genBST x upper
+        return $ Node Leaf x rightTree
+    else if x == upper then do
+        leftTree <- genBST lower x
+        return $ Node leftTree x Leaf
+    else 
+        frequency [
+            (1, return Leaf), 
+            (1, do 
+                rightTree <- genBST x upper
+                leftTree  <- genBST lower x
+                return $ Node leftTree x rightTree)]
+
+-- Exercise 9: Test parsers with HUnit
+parserTests :: Test
+parserTests = TestList [
+    "Integer: 2" ~: parseAll "2" ~?= Just (2 :: Integer),
+    "Integer: 0" ~: parseAll "0" ~?= Just (0 :: Integer)]
 
